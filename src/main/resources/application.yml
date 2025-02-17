@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: fabrick-banking-service
+
+fabrick:
+  api:
+    base-url: https://sandbox.platfr.io
+    auth-schema: S2S
+    api-key: ${FABRICK_API_KEY:FXOVVXXHVCPVPBZXIJOBGUGSKHDNFRRQJP}
+    account-id: ${FABRICK_ACCOUNT_ID:14537780}
+    time-zone: Europe/Rome
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    com.example.fabrick: INFO
+    org.springframework.web: INFO
