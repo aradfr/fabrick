@@ -7,6 +7,7 @@ import com.example.fabrick.dto.response.BalanceDTO;
 import com.example.fabrick.dto.response.MoneyTransferResponse;
 import com.example.fabrick.dto.response.TransactionDTO;
 import com.example.fabrick.exception.BankingServiceException;
+import com.example.fabrick.repository.TransactionRepository;
 import com.example.fabrick.service.BankingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,10 @@ class BankingServiceImplTest {
     @Mock
     private FabrickConfig config;
 
+    @Mock
+    private TransactionRepository transactionRepository;
+
+
     private MoneyTransferRequest createValidMoneyTransferRequest() {
         MoneyTransferRequest request = new MoneyTransferRequest();
         request.setReceiverName("John Doe");
@@ -79,6 +84,7 @@ class BankingServiceImplTest {
         when(config.getAuthSchema()).thenReturn("S2S");
         when(config.getApiKey()).thenReturn("FXOVVXXHVCPVPBZXIJOBGUGSKHDNFRRQJP");
         when(config.getTimeZone()).thenReturn(TimeZone.getDefault().toZoneId());
+
     }
 
     @Test

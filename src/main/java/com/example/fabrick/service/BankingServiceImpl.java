@@ -6,7 +6,9 @@ import com.example.fabrick.dto.response.ApiResponse;
 import com.example.fabrick.dto.response.BalanceDTO;
 import com.example.fabrick.dto.response.MoneyTransferResponse;
 import com.example.fabrick.dto.response.TransactionDTO;
+import com.example.fabrick.entity.TransactionEntity;
 import com.example.fabrick.exception.BankingServiceException;
+import com.example.fabrick.repository.TransactionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,12 +26,15 @@ public class BankingServiceImpl implements BankingService {
 
     private final RestTemplate restTemplate;
     private final FabrickConfig config;
+    private final TransactionRepository transactionRepository;
 
     @Autowired
-    public BankingServiceImpl(RestTemplate restTemplate, FabrickConfig config) {
+    public BankingServiceImpl(RestTemplate restTemplate, FabrickConfig config, TransactionRepository transactionRepository) {
         this.restTemplate = restTemplate;
         this.config = config;
+        this.transactionRepository = transactionRepository;
     }
+
 
     @Override
     public BalanceDTO getBalance() {
@@ -98,17 +103,37 @@ public class BankingServiceImpl implements BankingService {
         HttpHeaders headers = createHeaders();
         HttpEntity<MoneyTransferRequest> entity = new HttpEntity<>(request, headers);
 
-            ResponseEntity<ApiResponse<MoneyTransferResponse>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    new ParameterizedTypeReference<>() {
-                    });
+        ResponseEntity<ApiResponse<MoneyTransferResponse>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
 
-            validateResponse(response.getBody());
-            return response.getBody().getPayload();
+        validateResponse(response.getBody());
+        MoneyTransferResponse moneyTransferResponse = response.getBody().getPayload();
 
+        // Persist transaction entity after the money transfer is done
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setTransferId(moneyTransferResponse.getMoneyTransferId());
+        // Using the execution date from the request or you can also set it to LocalDate.now()
+        transaction.setExecutionDate(request.getExecutionDate());
+        transaction.setAmount(request.getAmount());
+        transaction.setCurrency(request.getCurrency());
+        transaction.setDescription(request.getDescription());
+        // Set creditor name and account code if available
+        if (request.getCreditor() != null) {
+            transaction.setCreditorName(request.getCreditor().getName());
+            if (request.getCreditor().getAccount() != null) {
+                transaction.setCreditorAccountCode(request.getCreditor().getAccount().getAccountCode());
+            }
+        }
+        transaction.setStatus(moneyTransferResponse.getStatus());
+        transactionRepository.save(transaction);
+        //TODO:Check here if tests didnt run
+        return moneyTransferResponse;
     }
+
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
