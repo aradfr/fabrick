@@ -98,21 +98,16 @@ public class BankingServiceImpl implements BankingService {
         HttpHeaders headers = createHeaders();
         HttpEntity<MoneyTransferRequest> entity = new HttpEntity<>(request, headers);
 
-        try {
             ResponseEntity<ApiResponse<MoneyTransferResponse>> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
                     new ParameterizedTypeReference<>() {
-                    }
-            );
+                    });
 
             validateResponse(response.getBody());
             return response.getBody().getPayload();
-        } catch (Exception e) {
-            log.error("Error creating money transfer for account {}", config.getAccountId(), e);
-            throw new BankingServiceException("Failed to create money transfer", e);
-        }
+
     }
 
     private HttpHeaders createHeaders() {
